@@ -364,17 +364,17 @@ h1, h2, h3 { margin: 0 0 8px; }
 
 /* ---------- ダーツ ---------- */
 .dart-board {
-  width: 240px; height: 240px; border-radius: 50%; margin: 10px auto 16px;
+  width: 170px; height: 170px; border-radius: 50%; margin: 10px auto 16px;
   position: relative; cursor: crosshair; box-shadow: var(--shadow);
   background: radial-gradient(circle,
-    #ff4d7e 0%, #ff4d7e 18%,
-    #ff9f68 18%, #ff9f68 36%,
-    #8fd15b 36%, #8fd15b 54%,
-    #5bc9c0 54%, #5bc9c0 72%,
+    #ff4d7e 0%, #ff4d7e 8%,
+    #ff9f68 8%, #ff9f68 22%,
+    #8fd15b 22%, #8fd15b 45%,
+    #5bc9c0 45%, #5bc9c0 72%,
     #9b7fe0 72%, #9b7fe0 100%);
   border: 4px solid white;
 }
-.dart-mark { position: absolute; width: 14px; height: 14px; margin: -7px 0 0 -7px; border-radius: 50%; background: #3d3450; border: 2px solid white; animation: popIn 0.2s ease; pointer-events: none; }
+.dart-mark { position: absolute; width: 10px; height: 10px; margin: -5px 0 0 -5px; border-radius: 50%; background: #3d3450; border: 2px solid white; animation: popIn 0.2s ease; pointer-events: none; }
 
 /* ---------- トランプ ---------- */
 .trump-card {
@@ -417,7 +417,7 @@ h1, h2, h3 { margin: 0 0 8px; }
   .tab-btn { font-size: 0.85rem; padding: 8px 12px; }
   .aspect-row { flex-direction: column; gap: 2px; }
   .sound-toggle { top: 12px; right: 12px; width: 36px; height: 36px; }
-  .dart-board { width: 210px; height: 210px; }
+  .dart-board { width: 150px; height: 150px; }
   .roulette-wrap, .roulette-wheel { width: 190px; height: 190px; }
   .janken-vs { font-size: 1.3rem; }
   .janken-side { font-size: 1.6rem; }

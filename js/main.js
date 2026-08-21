@@ -327,9 +327,21 @@ function checkMidnightEgg() {
 }
 
 /* ================= おみくじ ================= */
+// 端末ごとに一度だけ発行する識別子。おみくじの結果に混ぜることで、
+// 同じ日でも人(端末)によって結果が変わるようにする。
+function getUserSeed() {
+  let uid = LS.get("uranaiDeluxeUserSeed", null);
+  if (!uid) {
+    uid = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+    LS.set("uranaiDeluxeUserSeed", uid);
+  }
+  return uid;
+}
+
 function renderOmikuji() {
   const key = todayKey();
-  const stored = LS.get("omikujiToday", null);
+  const uid = getUserSeed();
+  let stored = LS.get("omikujiToday", null);
   const box = document.getElementById("omikuji-result");
   const btn = document.getElementById("omikuji-draw-btn");
 
@@ -359,16 +371,23 @@ function renderOmikuji() {
     box.classList.add("shaking");
     setTimeout(() => {
       box.classList.remove("shaking");
-      const forceFlag = LS.get("forceNextOmikuji", false);
-      let result;
-      if (forceFlag) {
-        const base = buildDailyFortune(`${key}|omikuji`);
-        result = { ...base, tier: TIERS[0] }; // 超大吉に固定
-        LS.set("forceNextOmikuji", false);
-      } else {
-        result = buildDailyFortune(`${key}|omikuji`);
+
+      // 今日の結果が既に確定している場合は、絶対に再抽選せず同じ結果を出し直すだけにする。
+      // (「結果は変わりません」の約束を確実に守るため)
+      if (stored && stored.date === key) {
+        paint(stored.result, stored.forced);
+        btn.textContent = "もう一度おみくじ箱を振る(結果は変わりません)";
+        return;
       }
-      LS.set("omikujiToday", { date: key, result, forced: !!forceFlag });
+
+      const forceFlag = LS.get("forceNextOmikuji", false);
+      let result = buildDailyFortune(`${key}|omikuji|${uid}`);
+      if (forceFlag) {
+        result = { ...result, tier: TIERS[0] }; // 超大吉に固定
+        LS.set("forceNextOmikuji", false);
+      }
+      stored = { date: key, result, forced: !!forceFlag };
+      LS.set("omikujiToday", stored);
       paint(result, !!forceFlag);
       btn.textContent = "もう一度おみくじ箱を振る(結果は変わりません)";
       if (result.tier.key === "daikichi2") confettiBurst();
@@ -822,6 +841,9 @@ function renderAmida() {
 }
 
 /* ================= ダーツ占い ================= */
+// リング境界(中心からの半径の割合)。的の中心=大吉ゾーンは面積比でごく小さくし、
+// 外側の凶・大凶ゾーンを広くとることで「ほぼ毎回大吉」にならないよう調整している。
+const DART_RING_BOUNDS = [0.08, 0.22, 0.45, 0.72, 1.01];
 function renderDart() {
   const board = document.getElementById("dart-board");
   const resultEl = document.getElementById("dart-result");
@@ -833,8 +855,9 @@ function renderDart() {
     const dy = e.clientY - cy;
     const dist = Math.sqrt(dx * dx + dy * dy);
     const R = rect.width / 2;
-    let ringIdx = Math.floor((dist / R) * DART_RINGS.length);
-    if (ringIdx >= DART_RINGS.length) ringIdx = DART_RINGS.length - 1;
+    const rel = dist / R;
+    let ringIdx = DART_RING_BOUNDS.findIndex((b) => rel <= b);
+    if (ringIdx === -1) ringIdx = DART_RINGS.length - 1;
     const ring = DART_RINGS[ringIdx];
     const tier = TIERS.find((t) => t.key === ring.tierKey);
 
