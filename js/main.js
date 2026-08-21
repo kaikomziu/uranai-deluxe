@@ -152,16 +152,69 @@ function confettiBurst() {
   }
 }
 
+/* ---------------- サウンド(WebAudioで生成、外部ファイル不要) ---------------- */
+function isSoundOn() { return LS.get("soundOn", true); }
+function playTone(freqs, type = "sine", dur = 0.14) {
+  if (!isSoundOn()) return;
+  try {
+    const Ctx = window.AudioContext || window.webkitAudioContext;
+    if (!Ctx) return;
+    const ctx = window._uranaiAudioCtx || (window._uranaiAudioCtx = new Ctx());
+    if (ctx.state === "suspended") ctx.resume();
+    const t0 = ctx.currentTime;
+    freqs.forEach((f, i) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = type;
+      osc.frequency.value = f;
+      const t = t0 + i * dur;
+      gain.gain.setValueAtTime(0.0001, t);
+      gain.gain.exponentialRampToValueAtTime(0.22, t + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(t);
+      osc.stop(t + dur + 0.02);
+    });
+  } catch (e) { /* サウンド非対応環境は無視 */ }
+}
+function initSoundToggle() {
+  const btn = document.getElementById("sound-toggle-btn");
+  if (!btn) return;
+  function paint() { btn.textContent = isSoundOn() ? "🔊" : "🔇"; }
+  paint();
+  btn.addEventListener("click", () => {
+    LS.set("soundOn", !isSoundOn());
+    paint();
+  });
+}
+
+/* ---------------- 汎用「運勢カード」レンダラー(運試しゲーム共通) ---------------- */
+function renderTierResult(container, tier, opts = {}) {
+  const text = opts.text || pick(TIER_TEXTS[tier.key]["総合運"]);
+  container.innerHTML = `
+    <div class="fortune-card compact tier-${tier.key}">
+      <div class="fortune-tier">${opts.title || `${tier.emoji} ${tier.label}`}</div>
+      ${opts.sub ? `<div class="type-flavor">${opts.sub}</div>` : ""}
+      <div class="aspect-text">${text}</div>
+      ${opts.extra || ""}
+    </div>`;
+  if (tier.score >= 7) confettiBurst();
+}
+
 /* ---------------- 隠し要素(イースターエッグ) ---------------- */
 const EGGS = [
   { key: "sugoibiki", name: "神引きモード", hint: "ロゴを高速で7回連打すると…?" },
-  { key: "konami", name: "都市伝説占い", hint: "懐かしのあの上下左右コマンドを試してみて" },
+  { key: "konami", name: "都市伝説占い", hint: "懐かしのあの上下左右コマンド(PC:矢印キー/スマホ:スワイプ)を試してみて" },
   { key: "tarot_secret", name: "???のカード", hint: "ミニタロットを何度も引くと激レアカードが…(1%)" },
   { key: "triple_six", name: "ゾロ目の神", hint: "サイコロで奇跡の3連続を狙え" },
   { key: "janken_master", name: "じゃんけん神", hint: "じゃんけんで5連勝してみよう" },
   { key: "footer_star", name: "かくれ星", hint: "ページの片隅に星が隠れているかも…?" },
   { key: "midnight", name: "真夜中の占い師", hint: "深夜0時台にこのサイトを開いてみて" },
+  { key: "slot_jackpot", name: "スロットの女神", hint: "スロットで7️⃣を3つ揃えると…?" },
 ];
+// 発見済みの隠し要素はlocalStorageに記録するが、
+// コンプリート状況を見せる一覧UIはあえて用意しない(サプライズ重視)。
 function getFoundEggs() { return LS.get("uranaiDeluxeEggs", []); }
 function unlockEgg(key) {
   const found = getFoundEggs();
@@ -171,23 +224,7 @@ function unlockEgg(key) {
   const egg = EGGS.find((e) => e.key === key);
   showToast(`🎉 隠し要素発見!「${egg.name}」`, 4000);
   confettiBurst();
-  renderEggCollection();
   return true;
-}
-function renderEggCollection() {
-  const wrap = document.getElementById("egg-collection");
-  if (!wrap) return;
-  const found = getFoundEggs();
-  wrap.innerHTML = `<p class="egg-progress">発見した隠し要素: <strong>${found.length} / ${EGGS.length}</strong></p>` +
-    `<div class="egg-grid">` +
-    EGGS.map((e) => {
-      const ok = found.includes(e.key);
-      return `<div class="egg-card ${ok ? "found" : ""}">
-        <div class="egg-icon">${ok ? "🏆" : "❓"}</div>
-        <div class="egg-name">${ok ? e.name : "???"}</div>
-        <div class="egg-hint">${ok ? "" : e.hint}</div>
-      </div>`;
-    }).join("") + `</div>`;
 }
 
 /* ---- ① ロゴ連打 → 神引きモード ---- */
@@ -220,22 +257,42 @@ const URBAN_LEGENDS = [
   "四つ葉のクローバーは実は探すより「見つかる」もの。肩の力を抜いて。",
   "コップの水を飲み干すと、その日一番の幸運が訪れるという言い伝え。",
 ];
-function initKonamiEgg() {
-  const seq = ["ArrowUp","ArrowUp","ArrowDown","ArrowDown","ArrowLeft","ArrowRight","ArrowLeft","ArrowRight","b","a"];
-  let idx = 0;
-  window.addEventListener("keydown", (e) => {
-    const key = e.key.length === 1 ? e.key.toLowerCase() : e.key;
-    if (key === seq[idx]) {
-      idx++;
-      if (idx === seq.length) {
-        idx = 0;
-        unlockEgg("konami");
-        showLegendModal();
-      }
-    } else {
-      idx = key === seq[0] ? 1 : 0;
+const KONAMI_SEQ = ["up", "up", "down", "down", "left", "right", "left", "right"];
+let konamiIdx = 0;
+function feedKonamiSymbol(sym) {
+  if (sym === KONAMI_SEQ[konamiIdx]) {
+    konamiIdx++;
+    if (konamiIdx === KONAMI_SEQ.length) {
+      konamiIdx = 0;
+      unlockEgg("konami");
+      showLegendModal();
     }
+  } else {
+    konamiIdx = sym === KONAMI_SEQ[0] ? 1 : 0;
+  }
+}
+function initKonamiEgg() {
+  // PC: 矢印キー
+  const keyMap = { ArrowUp: "up", ArrowDown: "down", ArrowLeft: "left", ArrowRight: "right" };
+  window.addEventListener("keydown", (e) => {
+    if (keyMap[e.key]) feedKonamiSymbol(keyMap[e.key]);
   });
+  // スマホ: スワイプ
+  let touchStartX = 0, touchStartY = 0;
+  window.addEventListener("touchstart", (e) => {
+    if (!e.touches[0]) return;
+    touchStartX = e.touches[0].clientX;
+    touchStartY = e.touches[0].clientY;
+  }, { passive: true });
+  window.addEventListener("touchend", (e) => {
+    if (!e.changedTouches[0]) return;
+    const dx = e.changedTouches[0].clientX - touchStartX;
+    const dy = e.changedTouches[0].clientY - touchStartY;
+    const absX = Math.abs(dx), absY = Math.abs(dy);
+    if (Math.max(absX, absY) < 40) return; // 小さすぎる動きは無視
+    if (absX > absY) feedKonamiSymbol(dx > 0 ? "right" : "left");
+    else feedKonamiSymbol(dy > 0 ? "down" : "up");
+  }, { passive: true });
 }
 function showLegendModal() {
   const modal = document.getElementById("legend-modal");
@@ -442,34 +499,84 @@ function renderJanken() {
   const state = LS.get("jankenState", { win: 0, lose: 0, draw: 0, streak: 0, best: 0 });
   const statEl = document.getElementById("janken-stats");
   const resultEl = document.getElementById("janken-result");
+  const handBtns = Array.from(document.querySelectorAll(".janken-hand-btn"));
+  let busy = false;
 
   function paintStats() {
     statEl.textContent = `勝ち: ${state.win} / 負け: ${state.lose} / 分け: ${state.draw} ・ 現在の連勝: ${state.streak}(最高: ${state.best})`;
   }
   paintStats();
 
-  document.querySelectorAll(".janken-hand-btn").forEach((btn) => {
+  function setBusy(v) {
+    busy = v;
+    handBtns.forEach((b) => (b.disabled = v));
+  }
+
+  handBtns.forEach((btn) => {
     btn.addEventListener("click", () => {
+      if (busy) return;
+      setBusy(true);
       const userHand = btn.dataset.hand;
-      const cpuHand = pick(JANKEN_HANDS).key;
       const userObj = JANKEN_HANDS.find((h) => h.key === userHand);
-      const cpuObj = JANKEN_HANDS.find((h) => h.key === cpuHand);
-      let outcome;
-      if (userHand === cpuHand) { outcome = "draw"; state.draw++; state.streak = state.streak; }
-      else if (
-        (userHand === "gu" && cpuHand === "choki") ||
-        (userHand === "choki" && cpuHand === "pa") ||
-        (userHand === "pa" && cpuHand === "gu")
-      ) {
-        outcome = "win"; state.win++; state.streak++; state.best = Math.max(state.best, state.streak);
-      } else {
-        outcome = "lose"; state.lose++; state.streak = 0;
-      }
-      LS.set("jankenState", state);
-      paintStats();
-      const outcomeLabel = { win: "🎉 あなたの勝ち!", lose: "😢 あなたの負け…", draw: "🤝 あいこ!" }[outcome];
-      resultEl.innerHTML = `<div class="janken-vs"><span>${userObj.emoji} あなた</span><span>VS</span><span>${cpuObj.emoji} コンピュータ</span></div><div class="janken-outcome ${outcome}">${outcomeLabel}</div>`;
-      if (outcome === "win" && state.streak >= 5) unlockEgg("janken_master");
+
+      resultEl.innerHTML = `
+        <div class="janken-vs building">
+          <span class="janken-side"><em>あなた</em>${userObj.emoji}</span>
+          <span class="janken-caption" id="janken-caption">さいしょは グー…</span>
+          <span class="janken-side"><em>コンピュータ</em><span id="cpu-shuffle">✊</span></span>
+        </div>`;
+      const shuffleEl = document.getElementById("cpu-shuffle");
+      const captionEl = document.getElementById("janken-caption");
+
+      let shuffleIdx = 0;
+      const shuffleTimer = setInterval(() => {
+        shuffleIdx = (shuffleIdx + 1) % JANKEN_HANDS.length;
+        shuffleEl.textContent = JANKEN_HANDS[shuffleIdx].emoji;
+      }, 80);
+      playTone([392], "square", 0.1);
+
+      setTimeout(() => { captionEl.textContent = "じゃんけん…"; playTone([440], "square", 0.1); }, 550);
+      setTimeout(() => { captionEl.textContent = "ポン!"; playTone([523], "square", 0.12); }, 1000);
+
+      setTimeout(() => {
+        clearInterval(shuffleTimer);
+        const cpuHand = pick(JANKEN_HANDS).key;
+        const cpuObj = JANKEN_HANDS.find((h) => h.key === cpuHand);
+        let outcome;
+        if (userHand === cpuHand) { outcome = "draw"; state.draw++; }
+        else if (
+          (userHand === "gu" && cpuHand === "choki") ||
+          (userHand === "choki" && cpuHand === "pa") ||
+          (userHand === "pa" && cpuHand === "gu")
+        ) {
+          outcome = "win"; state.win++; state.streak++; state.best = Math.max(state.best, state.streak);
+        } else {
+          outcome = "lose"; state.lose++; state.streak = 0;
+        }
+        LS.set("jankenState", state);
+        paintStats();
+
+        const outcomeLabel = { win: "🎉 WIN!", lose: "😢 LOSE…", draw: "🤝 DRAW" }[outcome];
+        resultEl.innerHTML = `
+          <div class="janken-vs reveal ${outcome}">
+            <span class="janken-side"><em>あなた</em>${userObj.emoji}</span>
+            <span>VS</span>
+            <span class="janken-side"><em>コンピュータ</em>${cpuObj.emoji}</span>
+          </div>
+          <div class="janken-outcome ${outcome} stamp">${outcomeLabel}</div>
+          ${outcome === "win" && state.streak >= 2 ? `<div class="streak-line">🔥 ${state.streak}連勝中!</div>` : ""}`;
+
+        if (outcome === "win") {
+          playTone([523, 659, 784, 1047], "triangle", 0.11);
+          confettiBurst();
+        } else if (outcome === "lose") {
+          playTone([300, 220], "sawtooth", 0.16);
+        } else {
+          playTone([440, 440], "sine", 0.11);
+        }
+        if (outcome === "win" && state.streak >= 5) unlockEgg("janken_master");
+        setBusy(false);
+      }, 1450);
     });
   });
 }
@@ -564,6 +671,260 @@ function renderLuckyNumber() {
   });
 }
 
+/* ================= スロットマシーン ================= */
+function weightedPickSymbol() {
+  const total = SLOT_SYMBOLS.reduce((s, x) => s + x.weight, 0);
+  let r = Math.random() * total;
+  for (const s of SLOT_SYMBOLS) {
+    if (r < s.weight) return s;
+    r -= s.weight;
+  }
+  return SLOT_SYMBOLS[0];
+}
+function renderSlot() {
+  const reels = [document.getElementById("slot-reel-1"), document.getElementById("slot-reel-2"), document.getElementById("slot-reel-3")];
+  const btn = document.getElementById("slot-spin-btn");
+  const resultEl = document.getElementById("slot-result");
+  btn.addEventListener("click", () => {
+    if (btn.disabled) return;
+    btn.disabled = true;
+    resultEl.innerHTML = "";
+    const finals = [weightedPickSymbol(), weightedPickSymbol(), weightedPickSymbol()];
+    const stopDelays = [700, 1000, 1300];
+    reels.forEach((reel, i) => {
+      const timer = setInterval(() => { reel.textContent = pick(SLOT_SYMBOLS).emoji; }, 70);
+      setTimeout(() => { clearInterval(timer); reel.textContent = finals[i].emoji; playTone([392], "square", 0.08); }, stopDelays[i]);
+    });
+    setTimeout(() => {
+      const [a, b, c] = finals;
+      let tier, extraNote = "";
+      if (a.key === b.key && b.key === c.key) {
+        if (a.key === "seven") { tier = TIERS.find((t) => t.key === "daikichi2"); unlockEgg("slot_jackpot"); extraNote = "🎊 セブン揃い、大当たり!"; }
+        else { tier = TIERS.find((t) => t.key === "daikichi"); extraNote = "✨ 絵柄が揃いました!"; }
+        playTone([523, 659, 784, 1047, 1319], "triangle", 0.1);
+        confettiBurst();
+      } else if (a.key === b.key || b.key === c.key || a.key === c.key) {
+        tier = pick([TIERS.find((t) => t.key === "chukichi"), TIERS.find((t) => t.key === "shokichi"), TIERS.find((t) => t.key === "kichi")]);
+        playTone([523, 659], "triangle", 0.1);
+      } else {
+        tier = pick([TIERS.find((t) => t.key === "suekichi"), TIERS.find((t) => t.key === "kyo")]);
+        playTone([330, 262], "sine", 0.12);
+      }
+      renderTierResult(resultEl, tier, { title: `${a.emoji} ${b.emoji} ${c.emoji} - ${tier.emoji} ${tier.label}`, sub: extraNote });
+      btn.disabled = false;
+    }, 1450);
+  });
+}
+
+/* ================= あみだくじ ================= */
+const AMIDA_COLS = 5, AMIDA_ROWS = 10, AMIDA_COL_SP = 52, AMIDA_ROW_H = 26;
+function generateAmidaRungs() {
+  const rungs = [];
+  for (let r = 0; r < AMIDA_ROWS; r++) {
+    const row = new Array(AMIDA_COLS - 1).fill(false);
+    let prev = false;
+    for (let i = 0; i < AMIDA_COLS - 1; i++) {
+      const place = !prev && Math.random() < 0.38;
+      row[i] = place;
+      prev = place;
+    }
+    rungs.push(row);
+  }
+  return rungs;
+}
+function drawAmidaBase(svg, rungs) {
+  const w = AMIDA_COL_SP * (AMIDA_COLS - 1) + 40;
+  const h = AMIDA_ROW_H * AMIDA_ROWS + 30;
+  svg.setAttribute("viewBox", `0 0 ${w} ${h}`);
+  svg.setAttribute("width", "100%");
+  svg.innerHTML = "";
+  const xOf = (c) => 20 + c * AMIDA_COL_SP;
+  for (let c = 0; c < AMIDA_COLS; c++) {
+    const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+    line.setAttribute("x1", xOf(c)); line.setAttribute("x2", xOf(c));
+    line.setAttribute("y1", 15); line.setAttribute("y2", h - 15);
+    line.setAttribute("class", "amida-base-line");
+    svg.appendChild(line);
+  }
+  rungs.forEach((row, r) => {
+    row.forEach((on, i) => {
+      if (!on) return;
+      const y = 15 + r * AMIDA_ROW_H;
+      const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+      line.setAttribute("x1", xOf(i)); line.setAttribute("x2", xOf(i + 1));
+      line.setAttribute("y1", y); line.setAttribute("y2", y);
+      line.setAttribute("class", "amida-base-line");
+      svg.appendChild(line);
+    });
+  });
+  return { xOf, h };
+}
+function simulateAmida(rungs, startCol) {
+  let col = startCol;
+  const waypoints = [{ row: 0, col }];
+  for (let r = 0; r < AMIDA_ROWS; r++) {
+    const row = rungs[r];
+    if (col > 0 && row[col - 1]) col -= 1;
+    else if (col < AMIDA_COLS - 1 && row[col]) col += 1;
+    waypoints.push({ row: r + 1, col });
+  }
+  return waypoints;
+}
+function renderAmida() {
+  const svg = document.getElementById("amida-svg");
+  const resultEl = document.getElementById("amida-result");
+  const startBtns = Array.from(document.querySelectorAll(".amida-start-btn"));
+  let rungs = generateAmidaRungs();
+  const meta = drawAmidaBase(svg, rungs);
+
+  function reset() {
+    rungs = generateAmidaRungs();
+    drawAmidaBase(svg, rungs);
+    resultEl.innerHTML = "";
+    startBtns.forEach((b) => (b.disabled = false));
+  }
+
+  startBtns.forEach((btn, startCol) => {
+    btn.addEventListener("click", () => {
+      if (btn.disabled) return;
+      startBtns.forEach((b) => (b.disabled = true));
+      const waypoints = simulateAmida(rungs, startCol);
+      const xOf = meta.xOf;
+      let d = `M ${xOf(waypoints[0].col)} 15`;
+      for (let i = 1; i < waypoints.length; i++) {
+        const y = 15 + waypoints[i].row * AMIDA_ROW_H;
+        d += ` L ${xOf(waypoints[i].col)} ${y}`;
+      }
+      const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+      path.setAttribute("d", d);
+      path.setAttribute("class", "amida-path");
+      svg.appendChild(path);
+      const len = path.getTotalLength();
+      path.style.strokeDasharray = len;
+      path.style.strokeDashoffset = len;
+      requestAnimationFrame(() => {
+        path.style.transition = "stroke-dashoffset 1.1s ease";
+        path.style.strokeDashoffset = "0";
+      });
+      playTone([440, 494, 554], "sine", 0.3);
+      setTimeout(() => {
+        const endCol = waypoints[waypoints.length - 1].col;
+        const prize = AMIDA_PRIZES[endCol];
+        const tier = TIERS.find((t) => t.key === prize.tierKey);
+        renderTierResult(resultEl, tier, {
+          title: `${prize.label} - ${tier.emoji} ${tier.label}`,
+          extra: `<button class="primary-btn small amida-retry-btn">🪜 もう一度引く</button>`,
+        });
+        resultEl.querySelector(".amida-retry-btn").addEventListener("click", reset);
+      }, 1250);
+    });
+  });
+}
+
+/* ================= ダーツ占い ================= */
+function renderDart() {
+  const board = document.getElementById("dart-board");
+  const resultEl = document.getElementById("dart-result");
+  board.addEventListener("pointerdown", (e) => {
+    const rect = board.getBoundingClientRect();
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
+    const dx = e.clientX - cx;
+    const dy = e.clientY - cy;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    const R = rect.width / 2;
+    let ringIdx = Math.floor((dist / R) * DART_RINGS.length);
+    if (ringIdx >= DART_RINGS.length) ringIdx = DART_RINGS.length - 1;
+    const ring = DART_RINGS[ringIdx];
+    const tier = TIERS.find((t) => t.key === ring.tierKey);
+
+    const mark = document.createElement("div");
+    mark.className = "dart-mark";
+    mark.style.left = (e.clientX - rect.left) + "px";
+    mark.style.top = (e.clientY - rect.top) + "px";
+    board.appendChild(mark);
+    setTimeout(() => mark.remove(), 2000);
+
+    playTone(ringIdx === 0 ? [659, 880, 1108] : [392], "triangle", 0.1);
+    renderTierResult(resultEl, tier, { title: `${ring.label} - ${tier.emoji} ${tier.label}` });
+  });
+}
+
+/* ================= トランプ占い ================= */
+function renderTrump() {
+  const btn = document.getElementById("trump-draw-btn");
+  const cardEl = document.getElementById("trump-card");
+  const resultEl = document.getElementById("trump-result");
+  btn.addEventListener("click", () => {
+    cardEl.classList.remove("flipped");
+    cardEl.classList.add("flipping");
+    setTimeout(() => {
+      cardEl.classList.remove("flipping");
+      const suit = pick(TRUMP_SUITS);
+      const rank = pick(TRUMP_RANKS);
+      const isRed = suit.key === "heart" || suit.key === "diamond";
+      cardEl.innerHTML = `<div class="trump-inner ${isRed ? "red" : "black"}"><div class="trump-rank">${rank}</div><div class="trump-mark">${suit.mark}</div></div>`;
+      cardEl.classList.add("flipped");
+      const tier = pickTier(Math.random);
+      playTone([440, 554], "triangle", 0.12);
+      renderTierResult(resultEl, tier, { title: `${suit.mark}${rank} - ${tier.emoji} ${tier.label}`, sub: suit.flavor });
+    }, 420);
+  });
+}
+
+/* ================= 福引ガチャ ================= */
+function renderGacha() {
+  const btn = document.getElementById("gacha-draw-btn");
+  const capsule = document.getElementById("gacha-capsule");
+  const resultEl = document.getElementById("gacha-result");
+  btn.addEventListener("click", () => {
+    if (btn.disabled) return;
+    btn.disabled = true;
+    capsule.textContent = "🎰";
+    capsule.classList.add("shaking");
+    playTone([349, 392, 440], "square", 0.12);
+    setTimeout(() => {
+      capsule.classList.remove("shaking");
+      const total = GACHA_RARITIES.reduce((s, g) => s + g.weight, 0);
+      let r = Math.random() * total, rarity = GACHA_RARITIES[0];
+      for (const g of GACHA_RARITIES) { if (r < g.weight) { rarity = g; break; } r -= g.weight; }
+      const tier = TIERS.find((t) => t.key === rarity.tierKey);
+      capsule.textContent = "🎁";
+      const stars = "★".repeat(rarity.stars) + "☆".repeat(5 - rarity.stars);
+      if (rarity.stars >= 4) { playTone([659, 784, 988, 1319], "triangle", 0.1); confettiBurst(); }
+      else playTone([523], "sine", 0.14);
+      renderTierResult(resultEl, tier, { title: `${stars} ${rarity.label} - ${tier.emoji} ${tier.label}` });
+      btn.disabled = false;
+    }, 750);
+  });
+}
+
+/* ================= 宝箱えらび ================= */
+function renderChest() {
+  const wrap = document.getElementById("chest-buttons");
+  const resultEl = document.getElementById("chest-result");
+  function build() {
+    wrap.innerHTML = CHEST_EMOJIS.map((e, i) => `<button class="chest-btn" data-i="${i}">${e}</button>`).join("");
+    wrap.querySelectorAll(".chest-btn").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        wrap.querySelectorAll(".chest-btn").forEach((b) => (b.disabled = true));
+        btn.textContent = "✨";
+        btn.classList.add("chest-open");
+        const tier = pickTier(Math.random);
+        playTone([440, 554, 659], "triangle", 0.12);
+        setTimeout(() => {
+          renderTierResult(resultEl, tier, {
+            title: `${tier.emoji} ${tier.label}`,
+            extra: `<button class="primary-btn small chest-retry-btn">📦 もう一度選ぶ</button>`,
+          });
+          resultEl.querySelector(".chest-retry-btn").addEventListener("click", () => { build(); resultEl.innerHTML = ""; });
+        }, 500);
+      });
+    });
+  }
+  build();
+}
+
 /* ================= 更新履歴 ================= */
 function renderChangelog() {
   const el = document.getElementById("changelog-list");
@@ -588,11 +949,17 @@ document.addEventListener("DOMContentLoaded", () => {
   renderRoulette();
   renderTarot();
   renderLuckyNumber();
+  renderSlot();
+  renderAmida();
+  renderDart();
+  renderTrump();
+  renderGacha();
+  renderChest();
   renderChangelog();
-  renderEggCollection();
   initLogoEgg();
   initKonamiEgg();
   initFooterStarEgg();
+  initSoundToggle();
   checkMidnightEgg();
   setInterval(checkMidnightEgg, 30000);
 

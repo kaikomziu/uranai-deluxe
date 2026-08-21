@@ -19,13 +19,14 @@
     <p class="tagline">毎日変わる運勢 × 運試しゲームがたくさん</p>
     <p id="today-display" class="today-display"></p>
     <span id="midnight-badge" class="midnight-badge">🌙 真夜中の特別モード</span>
+    <button id="sound-toggle-btn" class="sound-toggle" title="効果音のON/OFF">🔊</button>
   </div>
 </header>
 
 <nav class="main-tabs">
   <button class="tab-btn active" data-tab="fortune-tab">🔮 今日の占い</button>
   <button class="tab-btn" data-tab="game-tab">🎲 運試しゲーム</button>
-  <button class="tab-btn" data-tab="log-tab">📜 更新履歴・隠し要素</button>
+  <button class="tab-btn" data-tab="log-tab">📜 更新履歴</button>
 </nav>
 
 <main class="container">
@@ -81,6 +82,12 @@
       <button class="subtab-btn" data-group="game" data-subtab="roulette-panel">🎡 ルーレット</button>
       <button class="subtab-btn" data-group="game" data-subtab="tarot-panel">🃏 ミニタロット</button>
       <button class="subtab-btn" data-group="game" data-subtab="number-panel">🔢 ラッキーナンバー</button>
+      <button class="subtab-btn" data-group="game" data-subtab="slot-panel">🎰 スロット</button>
+      <button class="subtab-btn" data-group="game" data-subtab="amida-panel">🪜 あみだくじ</button>
+      <button class="subtab-btn" data-group="game" data-subtab="dart-panel">🎯 ダーツ</button>
+      <button class="subtab-btn" data-group="game" data-subtab="trump-panel">🃏 トランプ</button>
+      <button class="subtab-btn" data-group="game" data-subtab="gacha-panel">🎁 福引ガチャ</button>
+      <button class="subtab-btn" data-group="game" data-subtab="chest-panel">📦 宝箱えらび</button>
     </div>
 
     <div id="janken-panel" class="subtab-panel active" data-group="game">
@@ -135,16 +142,68 @@
       <button id="number-draw-btn" class="primary-btn">🔢 番号を引く</button>
       <div id="number-result" class="result-box"></div>
     </div>
+
+    <div id="slot-panel" class="subtab-panel" data-group="game">
+      <h2>スロットマシーン</h2>
+      <p class="panel-desc">絵柄を揃えよう。7️⃣が3つ揃うと大当たり!</p>
+      <div class="slot-machine">
+        <div class="slot-reel" id="slot-reel-1">🍒</div>
+        <div class="slot-reel" id="slot-reel-2">🍒</div>
+        <div class="slot-reel" id="slot-reel-3">🍒</div>
+      </div>
+      <button id="slot-spin-btn" class="primary-btn">🎰 レバーを引く</button>
+      <div id="slot-result" class="result-box"></div>
+    </div>
+
+    <div id="amida-panel" class="subtab-panel" data-group="game">
+      <h2>あみだくじ</h2>
+      <p class="panel-desc">スタート位置を1つ選んで結果を確かめよう。</p>
+      <div class="amida-starts">
+        <button class="amida-start-btn">①</button>
+        <button class="amida-start-btn">②</button>
+        <button class="amida-start-btn">③</button>
+        <button class="amida-start-btn">④</button>
+        <button class="amida-start-btn">⑤</button>
+      </div>
+      <div class="amida-wrap"><svg id="amida-svg"></svg></div>
+      <div id="amida-result" class="result-box"></div>
+    </div>
+
+    <div id="dart-panel" class="subtab-panel" data-group="game">
+      <h2>ダーツ占い</h2>
+      <p class="panel-desc">的をタップ(クリック)して運試し。中心に近いほど大吉!</p>
+      <div id="dart-board" class="dart-board"></div>
+      <div id="dart-result" class="result-box"></div>
+    </div>
+
+    <div id="trump-panel" class="subtab-panel" data-group="game">
+      <h2>トランプ占い</h2>
+      <p class="panel-desc">トランプを1枚引いて今日の運勢をチェック。</p>
+      <div id="trump-card" class="trump-card"></div>
+      <button id="trump-draw-btn" class="primary-btn">🃏 カードを引く</button>
+      <div id="trump-result" class="result-box"></div>
+    </div>
+
+    <div id="gacha-panel" class="subtab-panel" data-group="game">
+      <h2>福引ガチャ</h2>
+      <p class="panel-desc">レアリティは☆1〜☆5。☆5が出たら超ラッキー!</p>
+      <div id="gacha-capsule" class="gacha-capsule">🎁</div>
+      <button id="gacha-draw-btn" class="primary-btn">🎁 ガチャを引く</button>
+      <div id="gacha-result" class="result-box"></div>
+    </div>
+
+    <div id="chest-panel" class="subtab-panel" data-group="game">
+      <h2>宝箱えらび</h2>
+      <p class="panel-desc">4つの宝箱から1つを選んでみよう。</p>
+      <div id="chest-buttons" class="chest-buttons"></div>
+      <div id="chest-result" class="result-box"></div>
+    </div>
   </section>
 
-  <!-- ============ 更新履歴・隠し要素タブ ============ -->
+  <!-- ============ 更新履歴タブ ============ -->
   <section id="log-tab" class="tab-panel">
     <h2>更新履歴 <span id="site-version" class="version-badge"></span></h2>
     <div id="changelog-list"></div>
-
-    <h2>隠し要素コレクション 🥚</h2>
-    <p class="panel-desc">サイトのどこかに隠された7つの秘密。見つけられるかな?</p>
-    <div id="egg-collection"></div>
   </section>
 
 </main>

@@ -181,3 +181,52 @@ const NUMBER_VIBE = [
   "安定と基礎を象徴する数字。", "変化と自由を後押しする数字。", "愛情と思いやりを象徴する数字。",
   "探究心と直感を高める数字。", "豊かさと達成を象徴する数字。", "完成と手放しを象徴する数字。", "無限の可能性を秘めた数字。",
 ];
+
+/* ---------- スロットマシーン(絵柄と出現重み) ---------- */
+const SLOT_SYMBOLS = [
+  { key:"cherry", emoji:"🍒", weight:30 },
+  { key:"lemon",  emoji:"🍋", weight:25 },
+  { key:"grape",  emoji:"🍇", weight:20 },
+  { key:"bell",   emoji:"🔔", weight:15 },
+  { key:"gem",    emoji:"💎", weight:7  },
+  { key:"seven",  emoji:"7️⃣", weight:3  },
+];
+
+/* ---------- トランプ占い(スート別フレーバー) ---------- */
+const TRUMP_SUITS = [
+  { key:"spade",   mark:"♠", flavor:"知性と落ち着きが冴える一日。" },
+  { key:"heart",   mark:"♥", flavor:"愛情運・対人運にツキがある一日。" },
+  { key:"diamond", mark:"♦", flavor:"金運・チャンス運が高まる一日。" },
+  { key:"club",    mark:"♣", flavor:"成長運・行動力が高まる一日。" },
+];
+const TRUMP_RANKS = ["A","2","3","4","5","6","7","8","9","10","J","Q","K"];
+
+/* ---------- 福引ガチャ(レアリティ別重み&コメント) ---------- */
+const GACHA_RARITIES = [
+  { stars: 1, weight: 55, tierKey: "suekichi",  label: "ノーマル" },
+  { stars: 2, weight: 27, tierKey: "kichi",     label: "アンコモン" },
+  { stars: 3, weight: 12, tierKey: "chukichi",  label: "レア" },
+  { stars: 4, weight: 5,  tierKey: "daikichi",  label: "スーパーレア" },
+  { stars: 5, weight: 1,  tierKey: "daikichi2", label: "ウルトラレア" },
+];
+
+/* ---------- 宝箱えらび(見た目バリエーション) ---------- */
+const CHEST_EMOJIS = ["🎁", "📦", "🗝️", "💼"];
+
+/* ---------- あみだくじ 賞品リスト(列ごとの結果) ---------- */
+const AMIDA_PRIZES = [
+  { tierKey: "daikichi2", label: "🎉 超ラッキー賞" },
+  { tierKey: "daikichi",  label: "😄 ラッキー賞" },
+  { tierKey: "kichi",     label: "🙂 ふつう賞" },
+  { tierKey: "suekichi",  label: "😐 ささやか賞" },
+  { tierKey: "kyo",       label: "💧 残念賞" },
+];
+
+/* ---------- ダーツ占い(中心からのリングごとの結果) ---------- */
+const DART_RINGS = [
+  { tierKey: "daikichi2", label: "🎯 ブルズアイ!" },
+  { tierKey: "daikichi",  label: "内側リング" },
+  { tierKey: "kichi",     label: "中間リング" },
+  { tierKey: "suekichi",  label: "外側リング" },
+  { tierKey: "daikyo",    label: "的の外…" },
+];

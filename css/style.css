@@ -14,7 +14,8 @@
   --radius: 18px;
 }
 
-* { box-sizing: border-box; }
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+button, .subtab-btn, .tab-btn, a { touch-action: manipulation; }
 html, body {
   margin: 0; padding: 0;
   font-family: "Hiragino Maru Gothic ProN", "Yu Gothic", "Meiryo", sans-serif;
@@ -63,6 +64,20 @@ h1, h2, h3 { margin: 0 0 8px; }
   align-items: center;
   gap: 4px;
 }
+.sound-toggle {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  border: none;
+  background: #ffffffcc;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  font-size: 1.1rem;
+  cursor: pointer;
+  box-shadow: var(--shadow);
+}
+.site-header { position: relative; }
 
 /* ---------- タブ ---------- */
 .main-tabs {
@@ -175,6 +190,8 @@ h1, h2, h3 { margin: 0 0 8px; }
 .lucky-row { display: flex; flex-wrap: wrap; gap: 10px 16px; font-size: 0.85rem; color: var(--text-sub); border-top: 1px dashed var(--border); padding-top: 10px; margin-bottom: 8px; }
 .advice-row { font-size: 0.85rem; color: var(--text-sub); }
 .type-flavor { font-size: 0.85rem; color: var(--text-sub); margin-bottom: 10px; font-style: italic; }
+.fortune-card.compact { padding: 16px 18px; }
+.fortune-card.compact .aspect-text { font-size: 0.9rem; line-height: 1.6; }
 
 /* tier別カラー */
 .tier-daikichi2 { border-top-color: #ff4d7e; }
@@ -216,11 +233,27 @@ h1, h2, h3 { margin: 0 0 8px; }
   transition: transform 0.15s ease, border-color 0.15s ease;
 }
 .janken-hand-btn:hover { border-color: var(--accent); transform: translateY(-3px); }
-.janken-vs { display: flex; justify-content: space-between; font-size: 1.1rem; background: white; padding: 12px 16px; border-radius: 12px; box-shadow: var(--shadow); }
-.janken-outcome { text-align: center; font-size: 1.2rem; font-weight: bold; padding: 10px; }
+.janken-hand-btn:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
+.janken-vs {
+  display: flex; justify-content: space-between; align-items: center;
+  font-size: 1.6rem; background: white; padding: 16px 14px; border-radius: 14px;
+  box-shadow: var(--shadow); text-align: center; gap: 6px;
+}
+.janken-side { display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 2rem; }
+.janken-side em { font-style: normal; font-size: 0.72rem; color: var(--text-sub); order: -1; }
+.janken-vs.building #cpu-shuffle { display: inline-block; animation: shuffleWobble 0.3s ease infinite; }
+@keyframes shuffleWobble { 0%,100% { transform: scale(1) rotate(0);} 50% { transform: scale(1.12) rotate(-6deg);} }
+.janken-caption { font-size: 1.1rem; font-weight: bold; color: var(--accent); animation: captionPulse 0.5s ease infinite; }
+@keyframes captionPulse { 0%,100% { opacity: 1; } 50% { opacity: 0.55; } }
+.janken-vs.reveal { animation: vsPop 0.35s ease; }
+@keyframes vsPop { from { transform: scale(0.85); opacity: 0.4; } to { transform: scale(1); opacity: 1; } }
+.janken-outcome { text-align: center; font-size: 1.6rem; font-weight: bold; padding: 12px; }
 .janken-outcome.win { color: #e0507a; }
 .janken-outcome.lose { color: #6f9be0; }
-.janken-outcome.draw { color: #8fa; color: #6a9; }
+.janken-outcome.draw { color: #6a9; }
+.janken-outcome.stamp { animation: stampIn 0.45s cubic-bezier(.2,1.4,.5,1); }
+@keyframes stampIn { 0% { transform: scale(2) rotate(-12deg); opacity: 0; } 60% { transform: scale(0.95) rotate(4deg); opacity: 1; } 100% { transform: scale(1) rotate(0); } }
+.streak-line { text-align: center; font-weight: bold; color: #ff8a3d; animation: fadeIn 0.4s ease; }
 .stats-line { font-size: 0.85rem; color: var(--text-sub); text-align: center; }
 
 /* ---------- コイン & サイコロ ---------- */
@@ -273,15 +306,6 @@ h1, h2, h3 { margin: 0 0 8px; }
 .changelog-date { font-size: 0.8rem; color: var(--text-sub); }
 .changelog-entry ul { margin: 0; padding-left: 20px; font-size: 0.88rem; }
 
-/* ---------- 隠し要素コレクション ---------- */
-.egg-progress { font-size: 0.95rem; margin-bottom: 10px; }
-.egg-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
-.egg-card { background: white; border-radius: 14px; padding: 14px; text-align: center; box-shadow: var(--shadow); }
-.egg-card.found { background: linear-gradient(135deg, #fff6e5, #ffe9f3); }
-.egg-icon { font-size: 1.6rem; }
-.egg-name { font-weight: bold; font-size: 0.85rem; margin-top: 4px; }
-.egg-hint { font-size: 0.72rem; color: var(--text-sub); margin-top: 4px; }
-
 /* ---------- フッター ---------- */
 .site-footer { text-align: center; padding: 20px; color: var(--text-sub); font-size: 0.82rem; }
 #hidden-star { margin-left: 6px; cursor: default; opacity: 0.35; display: inline-block; transition: transform 0.15s ease; }
@@ -313,9 +337,91 @@ h1, h2, h3 { margin: 0 0 8px; }
 .modal-inner { background: white; border-radius: var(--radius); padding: 26px; max-width: 420px; text-align: center; box-shadow: var(--shadow); animation: popIn 0.3s ease; }
 .modal-inner p { font-size: 0.92rem; line-height: 1.6; color: var(--text); margin: 14px 0 18px; }
 
+/* ---------- スロットマシーン ---------- */
+.slot-machine {
+  display: flex; justify-content: center; gap: 8px;
+  background: linear-gradient(135deg, #3d3450, #5a4b7a);
+  padding: 20px; border-radius: 16px; margin: 10px 0 14px;
+  box-shadow: var(--shadow);
+}
+.slot-reel {
+  width: 64px; height: 64px; background: white; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 2rem; box-shadow: inset 0 2px 6px rgba(0,0,0,0.15);
+}
+
+/* ---------- あみだくじ ---------- */
+.amida-starts { display: flex; justify-content: center; gap: 8px; margin-bottom: 6px; flex-wrap: wrap; }
+.amida-start-btn {
+  width: 44px; height: 44px; border-radius: 50%; border: 2px solid var(--border);
+  background: white; font-size: 1rem; cursor: pointer;
+}
+.amida-start-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.amida-start-btn:not(:disabled):hover { border-color: var(--accent); }
+.amida-wrap { background: white; border-radius: var(--radius); box-shadow: var(--shadow); padding: 10px; margin-bottom: 14px; overflow-x: auto; }
+.amida-base-line { stroke: #e3d9ee; stroke-width: 3; }
+.amida-path { stroke: var(--accent); stroke-width: 4; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+
+/* ---------- ダーツ ---------- */
+.dart-board {
+  width: 240px; height: 240px; border-radius: 50%; margin: 10px auto 16px;
+  position: relative; cursor: crosshair; box-shadow: var(--shadow);
+  background: radial-gradient(circle,
+    #ff4d7e 0%, #ff4d7e 18%,
+    #ff9f68 18%, #ff9f68 36%,
+    #8fd15b 36%, #8fd15b 54%,
+    #5bc9c0 54%, #5bc9c0 72%,
+    #9b7fe0 72%, #9b7fe0 100%);
+  border: 4px solid white;
+}
+.dart-mark { position: absolute; width: 14px; height: 14px; margin: -7px 0 0 -7px; border-radius: 50%; background: #3d3450; border: 2px solid white; animation: popIn 0.2s ease; pointer-events: none; }
+
+/* ---------- トランプ ---------- */
+.trump-card {
+  width: 140px; height: 200px; margin: 10px auto 14px;
+  background: linear-gradient(135deg, #6f5fb0, #a487d9);
+  border-radius: 12px; display: flex; align-items: center; justify-content: center;
+  color: white; font-size: 2rem; box-shadow: var(--shadow);
+}
+.trump-card::before { content: "🂠"; font-size: 2.6rem; }
+.trump-card.flipped::before { content: ""; }
+.trump-card.flipping { animation: cardFlip 0.42s ease; }
+.trump-inner { text-align: center; background: white; width: 100%; height: 100%; border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; animation: fadeIn 0.3s ease; }
+.trump-inner.red { color: #e0507a; }
+.trump-inner.black { color: #3d3450; }
+.trump-rank { font-size: 2rem; font-weight: bold; }
+.trump-mark { font-size: 2.2rem; }
+
+/* ---------- 福引ガチャ ---------- */
+.gacha-capsule {
+  width: 90px; height: 90px; margin: 10px auto 6px; border-radius: 50%;
+  background: linear-gradient(135deg, #ffd166, #ff7fa0);
+  display: flex; align-items: center; justify-content: center; font-size: 2.4rem;
+  box-shadow: var(--shadow);
+}
+.gacha-capsule.shaking { animation: shake 0.6s ease infinite; }
+
+/* ---------- 宝箱えらび ---------- */
+.chest-buttons { display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; margin: 10px 0 14px; }
+.chest-btn {
+  width: 70px; height: 70px; border-radius: 14px; border: 2px solid var(--border);
+  background: white; font-size: 2rem; cursor: pointer; transition: transform 0.15s ease;
+}
+.chest-btn:hover:not(:disabled) { transform: translateY(-3px); border-color: var(--accent); }
+.chest-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.chest-btn.chest-open { animation: popIn 0.3s ease; }
+
 /* ---------- レスポンシブ ---------- */
 @media (max-width: 520px) {
   .two-col { grid-template-columns: 1fr; }
   .tab-btn { font-size: 0.85rem; padding: 8px 12px; }
   .aspect-row { flex-direction: column; gap: 2px; }
+  .sound-toggle { top: 12px; right: 12px; width: 36px; height: 36px; }
+  .dart-board { width: 210px; height: 210px; }
+  .roulette-wrap, .roulette-wheel { width: 190px; height: 190px; }
+  .janken-vs { font-size: 1.3rem; }
+  .janken-side { font-size: 1.6rem; }
 }
+
+/* タップしやすいよう主要ボタンに最低限のタッチターゲットを確保 */
+.subtab-btn, .janken-hand-btn, .amida-start-btn, .chest-btn { min-height: 40px; }
