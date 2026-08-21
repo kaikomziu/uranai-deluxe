@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>占いDELUXE - 毎日変わる運勢と運試し</title>
+<meta name="description" content="毎日変わるおみくじ・星座占い・血液型占い・干支占いに加えて、じゃんけんやタロットなど運試しゲームがたくさん詰まった占いサイト。">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🔮</text></svg>">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div id="confetti-layer"></div>
+<div id="toast-box"></div>
+
+<header class="site-header">
+  <div class="header-inner">
+    <h1 id="site-logo" title="連打すると何かが起こる…かも?">🔮 占い<span>DELUXE</span></h1>
+    <p class="tagline">毎日変わる運勢 × 運試しゲームがたくさん</p>
+    <p id="today-display" class="today-display"></p>
+    <span id="midnight-badge" class="midnight-badge">🌙 真夜中の特別モード</span>
+  </div>
+</header>
+
+<nav class="main-tabs">
+  <button class="tab-btn active" data-tab="fortune-tab">🔮 今日の占い</button>
+  <button class="tab-btn" data-tab="game-tab">🎲 運試しゲーム</button>
+  <button class="tab-btn" data-tab="log-tab">📜 更新履歴・隠し要素</button>
+</nav>
+
+<main class="container">
+
+  <!-- ============ 占いタブ ============ -->
+  <section id="fortune-tab" class="tab-panel active">
+    <div class="subtabs">
+      <button class="subtab-btn active" data-group="fortune" data-subtab="omikuji-panel">🎋 おみくじ</button>
+      <button class="subtab-btn" data-group="fortune" data-subtab="zodiac-panel">⭐ 星座占い</button>
+      <button class="subtab-btn" data-group="fortune" data-subtab="blood-panel">🩸 血液型占い</button>
+      <button class="subtab-btn" data-group="fortune" data-subtab="eto-panel">🐉 干支占い</button>
+    </div>
+
+    <div id="omikuji-panel" class="subtab-panel active" data-group="fortune">
+      <h2>今日のおみくじ</h2>
+      <p class="panel-desc">日付が変わるまで結果は同じ。明日また新しい運勢が出ます。</p>
+      <div id="omikuji-result" class="result-box"></div>
+      <button id="omikuji-draw-btn" class="primary-btn">🎋 おみくじ箱を振る</button>
+    </div>
+
+    <div id="zodiac-panel" class="subtab-panel" data-group="fortune">
+      <h2>星座占い</h2>
+      <p class="panel-desc">星座を選ぶと今日の運勢がわかります。</p>
+      <select id="zodiac-select" class="select-input"></select>
+      <div id="zodiac-result" class="result-box"></div>
+      <div id="zodiac-ranking" class="ranking-box"></div>
+    </div>
+
+    <div id="blood-panel" class="subtab-panel" data-group="fortune">
+      <h2>血液型占い</h2>
+      <p class="panel-desc">血液型を選ぶと今日の運勢と相性がわかります。</p>
+      <select id="blood-select" class="select-input"></select>
+      <div id="blood-result" class="result-box"></div>
+    </div>
+
+    <div id="eto-panel" class="subtab-panel" data-group="fortune">
+      <h2>干支占い</h2>
+      <p class="panel-desc">生まれた西暦年を入力してください。</p>
+      <div class="eto-input-row">
+        <input id="eto-year-input" type="number" class="select-input" min="1900" max="2100" placeholder="例: 2000">
+        <button id="eto-check-btn" class="primary-btn small">占う</button>
+      </div>
+      <div id="eto-result" class="result-box"></div>
+      <div id="eto-ranking" class="ranking-box"></div>
+    </div>
+  </section>
+
+  <!-- ============ 運試しゲームタブ ============ -->
+  <section id="game-tab" class="tab-panel">
+    <div class="subtabs">
+      <button class="subtab-btn active" data-group="game" data-subtab="janken-panel">✊ じゃんけん</button>
+      <button class="subtab-btn" data-group="game" data-subtab="coindice-panel">🪙 コイン・サイコロ</button>
+      <button class="subtab-btn" data-group="game" data-subtab="roulette-panel">🎡 ルーレット</button>
+      <button class="subtab-btn" data-group="game" data-subtab="tarot-panel">🃏 ミニタロット</button>
+      <button class="subtab-btn" data-group="game" data-subtab="number-panel">🔢 ラッキーナンバー</button>
+    </div>
+
+    <div id="janken-panel" class="subtab-panel active" data-group="game">
+      <h2>じゃんけん運試し</h2>
+      <p class="panel-desc">コンピュータとじゃんけん勝負!連勝記録を伸ばそう。</p>
+      <div class="janken-hands">
+        <button class="janken-hand-btn" data-hand="gu">✊ グー</button>
+        <button class="janken-hand-btn" data-hand="choki">✌️ チョキ</button>
+        <button class="janken-hand-btn" data-hand="pa">✋ パー</button>
+      </div>
+      <div id="janken-result" class="result-box"></div>
+      <p id="janken-stats" class="stats-line"></p>
+    </div>
+
+    <div id="coindice-panel" class="subtab-panel" data-group="game">
+      <h2>コイン占い & サイコロ占い</h2>
+      <div class="two-col">
+        <div class="mini-game">
+          <h3>🪙 コイン占い</h3>
+          <button id="coin-flip-btn" class="primary-btn small">コインを投げる</button>
+          <div id="coin-result" class="result-box small"></div>
+        </div>
+        <div class="mini-game">
+          <h3>🎲 サイコロ占い</h3>
+          <button id="dice-roll-btn" class="primary-btn small">サイコロを振る</button>
+          <div id="dice-result" class="result-box small"></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="roulette-panel" class="subtab-panel" data-group="game">
+      <h2>運勢ルーレット</h2>
+      <p class="panel-desc">8段階の運勢が出るルーレット。回してみよう!</p>
+      <div class="roulette-wrap">
+        <div class="roulette-pointer">▼</div>
+        <div id="roulette-wheel" class="roulette-wheel"></div>
+      </div>
+      <button id="roulette-spin-btn" class="primary-btn">🎡 ルーレットを回す</button>
+      <div id="roulette-result" class="result-box"></div>
+    </div>
+
+    <div id="tarot-panel" class="subtab-panel" data-group="game">
+      <h2>ミニタロット占い</h2>
+      <p class="panel-desc">大アルカナ22枚から1枚引きます。ごく稀に特別なカードが…?</p>
+      <div id="tarot-card" class="tarot-card"></div>
+      <button id="tarot-draw-btn" class="primary-btn">🃏 カードを引く</button>
+    </div>
+
+    <div id="number-panel" class="subtab-panel" data-group="game">
+      <h2>ラッキーナンバー診断</h2>
+      <p class="panel-desc">0〜99の数字を1つ、あなたに授けます。</p>
+      <button id="number-draw-btn" class="primary-btn">🔢 番号を引く</button>
+      <div id="number-result" class="result-box"></div>
+    </div>
+  </section>
+
+  <!-- ============ 更新履歴・隠し要素タブ ============ -->
+  <section id="log-tab" class="tab-panel">
+    <h2>更新履歴 <span id="site-version" class="version-badge"></span></h2>
+    <div id="changelog-list"></div>
+
+    <h2>隠し要素コレクション 🥚</h2>
+    <p class="panel-desc">サイトのどこかに隠された7つの秘密。見つけられるかな?</p>
+    <div id="egg-collection"></div>
+  </section>
+
+</main>
+
+<footer class="site-footer">
+  <p>🔮 占いDELUXE - 結果は毎日切り替わります。楽しい一日を!<span id="hidden-star">✦</span></p>
+</footer>
+
+<div id="legend-modal" class="modal">
+  <div class="modal-inner">
+    <h3>🕵️ 都市伝説占い</h3>
+    <p id="legend-text"></p>
+    <button id="legend-close" class="primary-btn small">閉じる</button>
+  </div>
+</div>
+
+<script src="js/data.js"></script>
+<script src="js/version.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>

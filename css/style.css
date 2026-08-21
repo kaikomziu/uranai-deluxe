@@ -1,0 +1,321 @@
+/* ============================================================
+   占いDELUXE - style.css
+   ============================================================ */
+:root {
+  --bg: #fdf3f8;
+  --bg-grad: linear-gradient(160deg, #fdf3f8 0%, #f2f0fd 45%, #eefaf7 100%);
+  --card-bg: #ffffff;
+  --text: #3d3450;
+  --text-sub: #8078a0;
+  --accent: #ff7fa0;
+  --accent2: #6f9be0;
+  --border: #f0e3ee;
+  --shadow: 0 8px 24px rgba(150, 110, 160, 0.12);
+  --radius: 18px;
+}
+
+* { box-sizing: border-box; }
+html, body {
+  margin: 0; padding: 0;
+  font-family: "Hiragino Maru Gothic ProN", "Yu Gothic", "Meiryo", sans-serif;
+  background: var(--bg-grad);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+  transition: background 0.6s ease;
+}
+body.midnight-mode {
+  background: linear-gradient(160deg, #0f1030 0%, #1a1440 50%, #10122b 100%);
+  color: #eae6ff;
+}
+body.midnight-mode .result-box,
+body.midnight-mode .ranking-box,
+body.midnight-mode #egg-collection,
+body.midnight-mode .mini-game,
+body.midnight-mode .subtabs { background: rgba(255,255,255,0.06); }
+
+h1, h2, h3 { margin: 0 0 8px; }
+
+/* ---------- ヘッダー ---------- */
+.site-header {
+  text-align: center;
+  padding: 28px 16px 18px;
+}
+#site-logo {
+  font-size: 2rem;
+  cursor: pointer;
+  user-select: none;
+  display: inline-block;
+  transition: transform 0.15s ease;
+}
+#site-logo:active { transform: scale(0.94); }
+#site-logo span { color: var(--accent); }
+.tagline { color: var(--text-sub); margin: 4px 0; font-size: 0.95rem; }
+.today-display { font-weight: bold; color: var(--accent2); margin: 4px 0; }
+.midnight-badge {
+  display: none;
+  margin-top: 6px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: #2a2060;
+  color: #ffd6f5;
+  font-size: 0.8rem;
+  align-items: center;
+  gap: 4px;
+}
+
+/* ---------- タブ ---------- */
+.main-tabs {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 0 12px 12px;
+}
+.tab-btn {
+  border: none;
+  background: #ffffffaa;
+  color: var(--text);
+  padding: 10px 18px;
+  border-radius: 999px;
+  font-size: 0.95rem;
+  cursor: pointer;
+  box-shadow: var(--shadow);
+  transition: all 0.2s ease;
+}
+.tab-btn.active { background: var(--accent); color: white; }
+.tab-panel { display: none; animation: fadeIn 0.3s ease; }
+.tab-panel.active { display: block; }
+
+.subtabs {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+  background: #ffffffaa;
+  padding: 8px;
+  border-radius: 14px;
+}
+.subtab-btn {
+  border: none;
+  background: transparent;
+  color: var(--text-sub);
+  padding: 8px 14px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 0.88rem;
+}
+.subtab-btn.active { background: var(--accent2); color: white; }
+.subtab-panel { display: none; animation: fadeIn 0.3s ease; }
+.subtab-panel.active { display: block; }
+
+@keyframes fadeIn { from { opacity: 0; transform: translateY(6px);} to { opacity: 1; transform: translateY(0);} }
+
+.container { max-width: 760px; margin: 0 auto; padding: 0 16px 60px; }
+.panel-desc { color: var(--text-sub); font-size: 0.88rem; margin-bottom: 14px; }
+
+/* ---------- ボタン ---------- */
+.primary-btn {
+  display: inline-block;
+  background: linear-gradient(135deg, var(--accent), #ffa3c0);
+  color: white;
+  border: none;
+  padding: 13px 26px;
+  border-radius: 999px;
+  font-size: 1rem;
+  font-weight: bold;
+  cursor: pointer;
+  box-shadow: 0 6px 16px rgba(255, 127, 160, 0.35);
+  transition: transform 0.15s ease;
+  margin: 6px 0;
+}
+.primary-btn:hover { transform: translateY(-2px); }
+.primary-btn:active { transform: scale(0.97); }
+.primary-btn.small { padding: 9px 18px; font-size: 0.88rem; }
+
+.select-input {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: white;
+  font-size: 1rem;
+  margin-bottom: 14px;
+}
+.eto-input-row { display: flex; gap: 8px; align-items: center; }
+.eto-input-row .select-input { margin-bottom: 0; }
+
+/* ---------- 運勢カード ---------- */
+.result-box { min-height: 20px; }
+.result-box.small { min-height: 10px; }
+.fortune-card {
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  padding: 18px 20px;
+  box-shadow: var(--shadow);
+  border-top: 6px solid var(--accent);
+  margin: 10px 0 16px;
+  animation: popIn 0.35s ease;
+}
+@keyframes popIn { from { opacity: 0; transform: scale(0.94);} to { opacity: 1; transform: scale(1);} }
+.fortune-tier { font-size: 1.3rem; font-weight: bold; margin-bottom: 10px; }
+.forced-badge {
+  display: inline-block;
+  background: linear-gradient(135deg, #ffd166, #ff7fa0);
+  color: white;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  margin-bottom: 10px;
+}
+.fortune-aspects { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
+.aspect-row { display: flex; gap: 10px; font-size: 0.92rem; }
+.aspect-label { flex: 0 0 auto; font-weight: bold; color: var(--accent2); white-space: nowrap; }
+.aspect-text { color: var(--text); }
+.lucky-row { display: flex; flex-wrap: wrap; gap: 10px 16px; font-size: 0.85rem; color: var(--text-sub); border-top: 1px dashed var(--border); padding-top: 10px; margin-bottom: 8px; }
+.advice-row { font-size: 0.85rem; color: var(--text-sub); }
+.type-flavor { font-size: 0.85rem; color: var(--text-sub); margin-bottom: 10px; font-style: italic; }
+
+/* tier別カラー */
+.tier-daikichi2 { border-top-color: #ff4d7e; }
+.tier-daikichi  { border-top-color: #ff7fa0; }
+.tier-chukichi  { border-top-color: #ff9f68; }
+.tier-shokichi  { border-top-color: #ffc857; }
+.tier-kichi     { border-top-color: #8fd15b; }
+.tier-suekichi  { border-top-color: #5bc9c0; }
+.tier-kyo       { border-top-color: #6f9be0; }
+.tier-daikyo    { border-top-color: #9b7fe0; }
+
+.shaking { animation: shake 0.65s ease; }
+@keyframes shake {
+  0%,100% { transform: rotate(0); }
+  15% { transform: rotate(-8deg); }
+  30% { transform: rotate(8deg); }
+  45% { transform: rotate(-8deg); }
+  60% { transform: rotate(8deg); }
+  75% { transform: rotate(-4deg); }
+  90% { transform: rotate(4deg); }
+}
+
+/* ランキング */
+.ranking-box { background: #ffffffcc; border-radius: var(--radius); padding: 14px 16px; margin-top: 10px; }
+.rank-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 6px; font-size: 0.85rem; }
+.rank-item { display: flex; gap: 6px; align-items: center; }
+.rank-no { font-weight: bold; color: var(--accent); min-width: 34px; }
+
+/* ---------- じゃんけん ---------- */
+.janken-hands { display: flex; gap: 10px; margin-bottom: 14px; }
+.janken-hand-btn {
+  flex: 1;
+  padding: 16px 8px;
+  border-radius: 14px;
+  border: 2px solid var(--border);
+  background: white;
+  font-size: 1.4rem;
+  cursor: pointer;
+  transition: transform 0.15s ease, border-color 0.15s ease;
+}
+.janken-hand-btn:hover { border-color: var(--accent); transform: translateY(-3px); }
+.janken-vs { display: flex; justify-content: space-between; font-size: 1.1rem; background: white; padding: 12px 16px; border-radius: 12px; box-shadow: var(--shadow); }
+.janken-outcome { text-align: center; font-size: 1.2rem; font-weight: bold; padding: 10px; }
+.janken-outcome.win { color: #e0507a; }
+.janken-outcome.lose { color: #6f9be0; }
+.janken-outcome.draw { color: #8fa; color: #6a9; }
+.stats-line { font-size: 0.85rem; color: var(--text-sub); text-align: center; }
+
+/* ---------- コイン & サイコロ ---------- */
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.mini-game { background: white; border-radius: var(--radius); padding: 16px; box-shadow: var(--shadow); text-align: center; }
+.coin { font-size: 2rem; width: 70px; height: 70px; line-height: 70px; border-radius: 50%; background: linear-gradient(135deg, #ffd166, #ffb347); color: white; margin: 12px auto; animation: coinFlip 0.5s ease; }
+@keyframes coinFlip { from { transform: rotateY(0deg) scale(0.6); } to { transform: rotateY(720deg) scale(1); } }
+.dice-face { font-size: 2rem; margin: 12px 0; animation: diceRoll 0.4s ease; }
+@keyframes diceRoll { from { transform: rotate(-30deg) scale(0.7); } to { transform: rotate(0) scale(1); } }
+
+/* ---------- ルーレット ---------- */
+.roulette-wrap { position: relative; width: 220px; height: 220px; margin: 10px auto 18px; }
+.roulette-pointer { position: absolute; top: -6px; left: 50%; transform: translateX(-50%); font-size: 1.4rem; z-index: 2; color: var(--accent); }
+.roulette-wheel {
+  width: 220px; height: 220px; border-radius: 50%;
+  position: relative;
+  box-shadow: 0 0 0 6px white, var(--shadow);
+  transition: transform 3s cubic-bezier(.17,.67,.21,1);
+}
+.wheel-label { position: absolute; top: 50%; left: 50%; font-size: 0.7rem; font-weight: bold; color: white; text-shadow: 0 1px 2px rgba(0,0,0,0.3); transform-origin: 0 0; }
+
+/* ---------- タロット ---------- */
+.tarot-card {
+  width: 200px; height: 300px; margin: 10px auto 18px;
+  background: linear-gradient(135deg, #6f5fb0, #a487d9);
+  border-radius: 16px;
+  display: flex; align-items: center; justify-content: center;
+  color: white; font-size: 2.4rem;
+  box-shadow: var(--shadow);
+  perspective: 800px;
+}
+.tarot-card::before { content: "🔮"; }
+.tarot-card.flipped::before { content: ""; }
+.tarot-card.flipping { animation: cardFlip 0.45s ease; }
+@keyframes cardFlip { 0% { transform: rotateY(0);} 50% { transform: rotateY(90deg);} 100% { transform: rotateY(0);} }
+.tarot-inner { text-align: center; padding: 16px; animation: fadeIn 0.3s ease; }
+.tarot-inner.secret { background: linear-gradient(135deg, #ffd166, #ff7fa0); border-radius: 12px; }
+.tarot-name { font-size: 1.1rem; font-weight: bold; margin-bottom: 6px; }
+.tarot-mark { font-size: 1.6rem; margin-bottom: 8px; }
+.tarot-meaning { font-size: 0.82rem; line-height: 1.5; }
+
+/* ---------- ラッキーナンバー ---------- */
+.lucky-number-big { font-size: 3rem; font-weight: bold; color: var(--accent); text-align: center; animation: popIn 0.4s ease; }
+
+/* ---------- 更新履歴 ---------- */
+.version-badge { font-size: 0.8rem; background: var(--accent2); color: white; padding: 3px 10px; border-radius: 999px; vertical-align: middle; }
+.changelog-entry { background: white; border-radius: var(--radius); padding: 16px 18px; margin-bottom: 14px; box-shadow: var(--shadow); }
+.changelog-head { display: flex; gap: 10px; align-items: baseline; margin-bottom: 6px; }
+.changelog-version { font-weight: bold; color: var(--accent); }
+.changelog-date { font-size: 0.8rem; color: var(--text-sub); }
+.changelog-entry ul { margin: 0; padding-left: 20px; font-size: 0.88rem; }
+
+/* ---------- 隠し要素コレクション ---------- */
+.egg-progress { font-size: 0.95rem; margin-bottom: 10px; }
+.egg-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+.egg-card { background: white; border-radius: 14px; padding: 14px; text-align: center; box-shadow: var(--shadow); }
+.egg-card.found { background: linear-gradient(135deg, #fff6e5, #ffe9f3); }
+.egg-icon { font-size: 1.6rem; }
+.egg-name { font-weight: bold; font-size: 0.85rem; margin-top: 4px; }
+.egg-hint { font-size: 0.72rem; color: var(--text-sub); margin-top: 4px; }
+
+/* ---------- フッター ---------- */
+.site-footer { text-align: center; padding: 20px; color: var(--text-sub); font-size: 0.82rem; }
+#hidden-star { margin-left: 6px; cursor: default; opacity: 0.35; display: inline-block; transition: transform 0.15s ease; }
+#hidden-star:hover { opacity: 0.6; }
+
+/* ---------- トースト ---------- */
+#toast-box { position: fixed; top: 16px; left: 50%; transform: translateX(-50%); z-index: 999; display: flex; flex-direction: column; gap: 8px; align-items: center; }
+.toast {
+  background: #3d3450e6;
+  color: white;
+  padding: 12px 20px;
+  border-radius: 999px;
+  font-size: 0.88rem;
+  opacity: 0;
+  transform: translateY(-10px);
+  transition: all 0.35s ease;
+  box-shadow: var(--shadow);
+}
+.toast.show { opacity: 1; transform: translateY(0); }
+
+/* ---------- 紙吹雪 ---------- */
+#confetti-layer { position: fixed; inset: 0; pointer-events: none; z-index: 998; overflow: hidden; }
+.confetti-piece { position: absolute; top: -20px; width: 8px; height: 14px; animation-name: confettiFall; animation-timing-function: ease-in; animation-fill-mode: forwards; }
+@keyframes confettiFall { to { transform: translateY(100vh) rotate(720deg); opacity: 0.3; } }
+
+/* ---------- モーダル ---------- */
+.modal { position: fixed; inset: 0; background: rgba(30, 20, 50, 0.55); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 20px; }
+.modal.open { display: flex; }
+.modal-inner { background: white; border-radius: var(--radius); padding: 26px; max-width: 420px; text-align: center; box-shadow: var(--shadow); animation: popIn 0.3s ease; }
+.modal-inner p { font-size: 0.92rem; line-height: 1.6; color: var(--text); margin: 14px 0 18px; }
+
+/* ---------- レスポンシブ ---------- */
+@media (max-width: 520px) {
+  .two-col { grid-template-columns: 1fr; }
+  .tab-btn { font-size: 0.85rem; padding: 8px 12px; }
+  .aspect-row { flex-direction: column; gap: 2px; }
+}
